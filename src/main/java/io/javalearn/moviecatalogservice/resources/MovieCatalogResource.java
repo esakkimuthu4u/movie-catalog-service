@@ -35,10 +35,19 @@ public class MovieCatalogResource {
 				
 	}
 
+	private Movie getFallbackMovie() {
+		return new Movie("0", "No Movie");
+	}
+	@HystrixCommand(fallbackMethod="getFallbackMovie")
 	private Movie getMovie() {
 		return restTemplate.getForObject("http://movie-info-service/movies/12345", Movie.class);
 	}
+	
+	private List<Rating> getFallbackRatings(String userId) {
+		return Arrays.asList(new Rating("0", 0));
+	}
 
+	@HystrixCommand(fallbackMethod="getFallbackRatings")
 	private List<Rating> getRatings(String userId) {
 		Rating[] ratings = restTemplate.getForObject("http://movie-rating-service/ratings/user/"+userId, Rating[].class);
 		return  Arrays.asList(ratings);
