@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+
 import io.javalearn.moviecatalogservice.models.CatalogItem;
 import io.javalearn.moviecatalogservice.models.Movie;
 import io.javalearn.moviecatalogservice.models.Rating;
@@ -21,11 +23,16 @@ public class MovieCatalogResource {
 	private RestTemplate restTemplate;
 	
 	@RequestMapping("/{userId}")
-	public List<CatalogItem> getCatlogs(@PathVariable("userId") String userId){
-		
+	@HystrixCommand(fallbackMethod="getFallbackCatalog")
+	public List<CatalogItem> getCatlogs(@PathVariable("userId") String userId){		
 		Movie movie = getMovie();
 		List<Rating> rating = getRatings(userId);
 		return rating.stream().map( r -> new CatalogItem(movie.getName(),"Best movie",r.getRating())).collect(Collectors.toList());
+	}
+	
+	public List<CatalogItem> getFallbackCatalog(@PathVariable("userId") String userId){		
+		return Arrays.asList(new CatalogItem("No movie","",0));
+				
 	}
 
 	private Movie getMovie() {
